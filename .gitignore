@@ -1,0 +1,27 @@
+# Archivos de configuración de entorno
+.env
+
+# Directorios de node_modules
+node_modules/
+
+# Carpetas de caché de whatsapp-web.js
+.wwebjs_cache/
+
+# Archivos de registro
+npm-debug.log
+yarn-error.log
+
+# Directorios de compilación o distribución
+/dist
+/build
+
+# Archivos de configuración del editor
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Archivos temporales
+*.tmp
+*.temp
+*.swp
