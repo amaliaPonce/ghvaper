@@ -1,8 +1,6 @@
 require('dotenv').config();
 const nodemailer = require('nodemailer');
 const Joi = require('joi');
-const { Client } = require('whatsapp-web.js');
-const qrcode = require('qrcode-terminal');
 
 const formularioSchema = Joi.object({
     nombre: Joi.string().required(),
@@ -53,10 +51,8 @@ const enviarCorreo = async (destinatario, asunto, contenido) => {
                 rejectUnauthorized: false, 
                 minVersion: 'TLSv1.2',
             }
-            
         });
         
-
         let mailOptions = {
             from: `"GH Vaper" <${process.env.SMTP_USER}>`,
             to: destinatario,
@@ -76,32 +72,6 @@ const enviarCorreo = async (destinatario, asunto, contenido) => {
     }
 };
 
-// Inicialización del cliente de WhatsApp Web
-const whatsappClient = new Client();
-whatsappClient.on('qr', (qr) => {
-    qrcode.generate(qr, { small: true });
-});
-whatsappClient.on('ready', () => {
-    console.log('Cliente de WhatsApp listo');
-});
-whatsappClient.initialize();
-
-const enviarWhatsApp = async (numero, mensaje) => {
-    try {
-        if (!whatsappClient.info) {
-            console.log("Esperando que el cliente de WhatsApp esté listo...");
-            await new Promise(resolve => whatsappClient.once('ready', resolve));
-        }
-        const numeroLimpio = numero.replace(/[^0-9]+/g, ''); 
-        const numeroCompleto = `${numeroLimpio}@c.us`; 
-        await whatsappClient.sendMessage(numeroCompleto, mensaje);
-        console.log('Mensaje de WhatsApp enviado a:', numero);
-    } catch (error) {
-        console.error('Error al enviar mensaje de WhatsApp:', error);
-        throw error;
-    }
-};
-
 const procesarFormulario = async (req, res) => {
     try {
         const value = await formularioSchema.validateAsync(req.body);
@@ -112,14 +82,11 @@ const procesarFormulario = async (req, res) => {
         await enviarCorreo(value.email, "Detalles del Presupuesto", contenidoCliente);
         console.log('Correo enviado al cliente:', value.email);
 
-        await enviarWhatsApp(value.telefono, contenidoCliente);
-        console.log('WhatsApp enviado al cliente:', value.telefono);
-
         const contenidoAdmin = `Nuevo formulario recibido:\nNombre: ${value.nombre}\nEmail: ${value.email}\nTeléfono: ${value.telefono}\nModelo: ${value.modelo}\nCantidad: ${value.cantidad}\nPersonalización: ${value.personalizacion ? "Sí" : "No"}\nLanyard: ${value.lanyard ? "Sí" : "No"}\nStand: ${value.stand}`;
         await enviarCorreo(process.env.ADMIN_EMAIL, "Nuevo Formulario Recibido", contenidoAdmin);
         console.log('Correo enviado al administrador:', process.env.ADMIN_EMAIL);
 
-        res.json({ mensaje: "Formulario procesado, correo y WhatsApp enviados." });
+        res.json({ mensaje: "Formulario procesado, correo enviado." });
     } catch (error) {
         console.error('Error al procesar formulario:', error);
         res.status(400).json({ error: error.message });
